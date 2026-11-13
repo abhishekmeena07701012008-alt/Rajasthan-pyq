@@ -1,0 +1,30 @@
+{
+  "id": "/",
+  "name": "Rajasthan PYQ Master",
+  "short_name": "Rajasthan PYQ",
+  "description": "राजस्थान प्रतियोगी परीक्षाओं की तैयारी के लिए Previous Year Questions और Mock Tests ऐप।",
+  "lang": "hi-IN",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#172554",
+  "categories": [
+    "education",
+    "productivity"
+  ],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
