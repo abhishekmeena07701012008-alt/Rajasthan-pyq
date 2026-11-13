@@ -1,0 +1,29 @@
+{
+  "name": "rajasthan-pyq-master",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Rajasthan PYQ Master - Bilingual Competitive Exam Preparation App",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview",
+    "cap:sync": "cap sync",
+    "cap:android": "cap open android",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/app": "^7.0.1",
+    "@capacitor/core": "^7.4.3",
+    "@capacitor/splash-screen": "^7.0.1",
+    "firebase": "^12.5.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.3",
+    "vite": "^6.4.1"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
