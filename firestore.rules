@@ -1,0 +1,316 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // -----------------------------------------
+    // AUTHENTICATION HELPERS
+    // -----------------------------------------
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isSuperAdmin() {
+      return isSignedIn() &&
+        (
+          request.auth.token.role == "super_admin" ||
+          request.auth.token.superAdmin == true
+        );
+    }
+
+    function isAdminEditor() {
+      return isSignedIn() &&
+        request.auth.token.role == "admin_editor";
+    }
+
+    function isAdmin() {
+      return isSuperAdmin() || isAdminEditor();
+    }
+
+    // -----------------------------------------
+    // USERS
+    // -----------------------------------------
+
+    match /users/{userId} {
+
+      allow read: if isOwner(userId) || isAdmin();
+
+      // Users can create only their own basic profile.
+      // They cannot assign themselves admin privileges.
+      allow create: if isOwner(userId)
+        && request.resource.data.keys().hasOnly([
+          "uid",
+          "displayName",
+          "email",
+          "photoURL",
+          "language",
+          "createdAt",
+          "updatedAt"
+        ])
+        && request.resource.data.uid == userId;
+
+      allow update: if isOwner(userId)
+        && request.resource.data.diff(resource.data)
+          .affectedKeys().hasOnly([
+            "displayName",
+            "photoURL",
+            "language",
+            "updatedAt"
+          ]);
+
+      // Account deletion should use a trusted backend workflow.
+      allow delete: if isSuperAdmin();
+    }
+
+    // -----------------------------------------
+    // QUESTIONS
+    // -----------------------------------------
+
+    match /questions/{questionId} {
+
+      // Students can read only published questions.
+      allow read: if (
+        resource.data.status == "PUBLISHED" &&
+        resource.data.isPublished == true
+      ) || isAdmin();
+
+      // All question creation and modification
+      // must go through secure Cloud Functions.
+      allow create, update, delete: if false;
+    }
+
+    // -----------------------------------------
+    // EXAMS
+    // -----------------------------------------
+
+    match /exams/{examId} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
+
+    // -----------------------------------------
+    // SUBJECTS
+    // -----------------------------------------
+
+    match /subjects/{subjectId} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
+
+    // -----------------------------------------
+    // TOPICS
+    // -----------------------------------------
+
+    match /topics/{topicId} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
+
+    // -----------------------------------------
+    // SUBTOPICS
+    // -----------------------------------------
+
+    match /subtopics/{subtopicId} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
+
+    // -----------------------------------------
+    // TEST ATTEMPTS
+    // -----------------------------------------
+
+    match /testAttempts/{attemptId} {
+
+      allow read: if isSignedIn() &&
+        resource.data.userId == request.auth.uid;
+
+      // Admins may read test history through
+      // protected Cloud Functions instead.
+      allow read: if isAdmin();
+
+      // Score and leaderboard records must be
+      // validated and written by trusted backend.
+      allow create, update, delete: if false;
+    }
+
+    // -----------------------------------------
+    // LEADERBOARD
+    // -----------------------------------------
+
+    match /leaderboard/{entryId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // -----------------------------------------
+    // DAILY QUIZ
+    // -----------------------------------------
+
+    match /dailyQuiz/{quizId} {
+      allow read: if resource.data.status == "PUBLISHED"
+        || isAdmin();
+
+      allow write: if isSuperAdmin();
+    }
+
+    // -----------------------------------------
+    // CURRENT AFFAIRS
+    // -----------------------------------------
+
+    match /currentAffairs/{articleId} {
+      allow read: if resource.data.status == "PUBLISHED"
+        || isAdmin();
+
+      allow write: if false;
+    }
+
+    // -----------------------------------------
+    // BOOKMARKS
+    // -----------------------------------------
+
+    match /userBookmarks/{bookmarkId} {
+
+      allow read: if isSignedIn() &&
+        resource.data.userId == request.auth.uid;
+
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.keys().hasOnly([
+          "userId",
+          "questionId",
+          "createdAt"
+        ]);
+
+      allow update: if false;
+
+      allow delete: if isSignedIn() &&
+        resource.data.userId == request.auth.uid;
+    }
+
+    // -----------------------------------------
+    // USER NOTES
+    // -----------------------------------------
+
+    match /userNotes/{noteId} {
+
+      allow read: if isSignedIn() &&
+        resource.data.userId == request.auth.uid;
+
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid;
+
+      allow update: if isSignedIn()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == resource.data.userId;
+
+      allow delete: if isSignedIn() &&
+        resource.data.userId == request.auth.uid;
+    }
+
+    // -----------------------------------------
+    // NOTIFICATIONS
+    // -----------------------------------------
+
+    match /notifications/{notificationId} {
+
+      allow read: if isSignedIn() &&
+        resource.data.userId == request.auth.uid;
+
+      // Notification creation is backend-only.
+      allow create, delete: if false;
+
+      allow update: if isSignedIn()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.diff(resource.data)
+          .affectedKeys().hasOnly(["read", "readAt"]);
+    }
+
+    // -----------------------------------------
+    // REPORTS
+    // -----------------------------------------
+
+    match /reports/{reportId} {
+
+      allow read: if isAdmin() ||
+        (
+          isSignedIn() &&
+          resource.data.userId == request.auth.uid
+        );
+
+      // Reports are submitted through Cloud Functions.
+      allow create, update, delete: if false;
+    }
+
+    // -----------------------------------------
+    // ANNOUNCEMENTS
+    // -----------------------------------------
+
+    match /announcements/{announcementId} {
+      allow read: if resource.data.status == "PUBLISHED"
+        || isAdmin();
+
+      allow write: if isSuperAdmin();
+    }
+
+    // -----------------------------------------
+    // ADMIN ROLES
+    // -----------------------------------------
+
+    match /adminRoles/{userId} {
+      allow read: if isSuperAdmin() ||
+        isOwner(userId);
+
+      // Role assignment is handled by Admin SDK.
+      allow write: if false;
+    }
+
+    // -----------------------------------------
+    // ACTIVITY LOGS
+    // -----------------------------------------
+
+    match /activityLogs/{logId} {
+      allow read: if isSuperAdmin();
+      allow write: if false;
+    }
+
+    // -----------------------------------------
+    // AI RESEARCH JOBS
+    // -----------------------------------------
+
+    match /aiResearchJobs/{jobId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // -----------------------------------------
+    // PYQ SOURCES
+    // -----------------------------------------
+
+    match /pyqSources/{sourceId} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
+
+    // -----------------------------------------
+    // APP SETTINGS
+    // -----------------------------------------
+
+    match /appSettings/{settingId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    // -----------------------------------------
+    // DEFAULT DENY
+    // -----------------------------------------
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
