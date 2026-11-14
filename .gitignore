@@ -1,0 +1,64 @@
+# Dependencies
+node_modules/
+functions/node_modules/
+
+# Build output
+dist/
+build/
+out/
+
+# Environment files
+.env
+.env.*
+!.env.example
+functions/.env
+functions/.env.*
+
+# Firebase credentials
+service-account.json
+*-service-account.json
+*serviceAccount*.json
+firebase-adminsdk-*.json
+
+# Private keys
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Firebase local cache
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# Android build files
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+
+# Signing credentials
+*.jks
+*.keystore
+key.properties
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Coverage and temporary files
+coverage/
+.tmp/
+temp/
+.cache/
+
+# Editor files
+.vscode/
+.idea/
+
+# Operating system files
+.DS_Store
+Thumbs.db
