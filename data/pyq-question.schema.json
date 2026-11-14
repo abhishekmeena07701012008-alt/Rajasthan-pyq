@@ -1,0 +1,164 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rajasthan-pyq-e1803.web.app/schemas/pyq-question.schema.json",
+  "title": "Rajasthan PYQ Question",
+  "description": "Schema for bilingual Rajasthan competitive exam questions.",
+  "type": "object",
+  "additionalProperties": false,
+
+  "required": [
+    "id",
+    "examName",
+    "year",
+    "questionNumber",
+    "question",
+    "options",
+    "correctAnswer",
+    "subject",
+    "topic",
+    "difficulty",
+    "questionType",
+    "verificationStatus",
+    "source",
+    "answerKeySource"
+  ],
+
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+
+    "examName": {
+      "type": "string",
+      "minLength": 1
+    },
+
+    "year": {
+      "type": "integer",
+      "minimum": 2000,
+      "maximum": 2100
+    },
+
+    "examDate": {
+      "type": "string"
+    },
+
+    "examTime": {
+      "type": "string"
+    },
+
+    "shift": {
+      "type": "string"
+    },
+
+    "paperCode": {
+      "type": "string"
+    },
+
+    "questionNumber": {
+      "type": "integer",
+      "minimum": 1
+    },
+
+    "question": {
+      "type": "object",
+      "required": ["hi", "en"],
+      "additionalProperties": false,
+      "properties": {
+        "hi": {
+          "type": "string",
+          "minLength": 1
+        },
+        "en": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+
+    "options": {
+      "type": "object",
+      "required": ["hi", "en"],
+      "additionalProperties": false,
+      "properties": {
+        "hi": {
+          "$ref": "#/$defs/options"
+        },
+        "en": {
+          "$ref": "#/$defs/options"
+        }
+      }
+    },
+
+    "correctAnswer": {
+      "type": "string",
+      "enum": ["A", "B", "C", "D"]
+    },
+
+    "subject": {
+      "type": "string",
+      "minLength": 1
+    },
+
+    "topic": {
+      "type": "string",
+      "minLength": 1
+    },
+
+    "subtopic": {
+      "type": "string"
+    },
+
+    "difficulty": {
+      "type": "string",
+      "enum": ["easy", "medium", "hard"]
+    },
+
+    "questionType": {
+      "type": "string",
+      "enum": ["verified_pyq", "practice"]
+    },
+
+    "verificationStatus": {
+      "type": "string",
+      "enum": ["pending", "verified", "rejected"]
+    },
+
+    "source": {
+      "type": "string",
+      "minLength": 1
+    },
+
+    "answerKeySource": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+
+  "$defs": {
+    "options": {
+      "type": "object",
+      "required": ["A", "B", "C", "D"],
+      "additionalProperties": false,
+      "properties": {
+        "A": {
+          "type": "string",
+          "minLength": 1
+        },
+        "B": {
+          "type": "string",
+          "minLength": 1
+        },
+        "C": {
+          "type": "string",
+          "minLength": 1
+        },
+        "D": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}
