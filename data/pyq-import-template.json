@@ -1,0 +1,44 @@
+[
+  {
+    "id": "",
+    "examName": "",
+    "year": null,
+    "examDate": "",
+    "examTime": "",
+    "shift": "",
+    "paperCode": "",
+    "questionNumber": null,
+
+    "question": {
+      "hi": "",
+      "en": ""
+    },
+
+    "options": {
+      "hi": {
+        "A": "",
+        "B": "",
+        "C": "",
+        "D": ""
+      },
+      "en": {
+        "A": "",
+        "B": "",
+        "C": "",
+        "D": ""
+      }
+    },
+
+    "correctAnswer": "",
+    "subject": "",
+    "topic": "",
+    "subtopic": "",
+    "difficulty": "medium",
+
+    "questionType": "verified_pyq",
+    "verificationStatus": "pending",
+
+    "source": "",
+    "answerKeySource": ""
+  }
+]
