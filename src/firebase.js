@@ -1,6 +1,7 @@
 /* =========================================================
    RAJASTHAN PYQ MASTER
-   Firebase Configuration and Initialization
+   Firebase Configuration
+   File: src/firebase.js
    ========================================================= */
 
 import { initializeApp } from "firebase/app";
@@ -13,8 +14,7 @@ import {
 } from "firebase/auth";
 
 import {
-    getFirestore,
-    enableIndexedDbPersistence
+    getFirestore
 } from "firebase/firestore";
 
 import {
@@ -22,25 +22,43 @@ import {
 } from "firebase/storage";
 
 import {
+    getFunctions
+} from "firebase/functions";
+
+import {
     getAnalytics,
     isSupported
 } from "firebase/analytics";
 
-/* ---------- 1. FIREBASE CONFIGURATION ---------- */
 
-// Firebase की जानकारी .env फाइल से आएगी।
+/* =========================================================
+   1. FIREBASE CONFIGURATION
+   ========================================================= */
 
 const firebaseConfig = {
+
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+
     authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+
     projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+
     storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+
+    messagingSenderId:
+        import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+
     appId: import.meta.env.VITE_FIREBASE_APP_ID,
-    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+
+    measurementId:
+        import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+
 };
 
-/* ---------- 2. CONFIGURATION VALIDATION ---------- */
+
+/* =========================================================
+   2. CONFIGURATION VALIDATION
+   ========================================================= */
 
 const requiredConfig = [
     "apiKey",
@@ -54,110 +72,148 @@ const missingConfig = requiredConfig.filter(
 );
 
 if (missingConfig.length > 0) {
+
     throw new Error(
         `Firebase configuration missing: ${missingConfig.join(", ")}`
     );
+
 }
 
-/* ---------- 3. INITIALIZE FIREBASE ---------- */
+
+/* =========================================================
+   3. INITIALIZE FIREBASE
+   ========================================================= */
 
 const app = initializeApp(firebaseConfig);
 
-/* ---------- 4. FIREBASE AUTHENTICATION ---------- */
+
+/* =========================================================
+   4. FIREBASE AUTHENTICATION
+   ========================================================= */
 
 const auth = getAuth(app);
 
-// Google Login Provider
 const googleProvider = new GoogleAuthProvider();
 
 googleProvider.setCustomParameters({
     prompt: "select_account"
 });
 
-// Login session browser में persist करने की कोशिश।
 const authPersistenceReady = setPersistence(
     auth,
     browserLocalPersistence
-);
+).catch(error => {
 
-/* ---------- 5. FIRESTORE DATABASE ---------- */
+    console.error(
+        "Firebase Auth Persistence Error:",
+        error
+    );
+
+    throw error;
+
+});
+
+
+/* =========================================================
+   5. FIRESTORE DATABASE
+   ========================================================= */
+
+// Firestore Offline Persistence जानबूझकर Enable नहीं है।
 
 const db = getFirestore(app);
 
-// Offline persistence.
-// यदि किसी दूसरे tab में पहले से persistence enabled है,
-// तो उस स्थिति को सुरक्षित रूप से संभालेंगे।
 
-let offlinePersistenceEnabled = false;
-
-const offlinePersistenceReady = enableIndexedDbPersistence(db)
-    .then(() => {
-        offlinePersistenceEnabled = true;
-        return true;
-    })
-    .catch(error => {
-        if (
-            error.code === "failed-precondition" ||
-            error.code === "unimplemented"
-        ) {
-            console.warn(
-                "Firestore offline persistence unavailable:",
-                error.code
-            );
-
-            return false;
-        }
-
-        console.error(
-            "Firestore persistence error:",
-            error
-        );
-
-        return false;
-    });
-
-/* ---------- 6. FIREBASE STORAGE ---------- */
+/* =========================================================
+   6. FIREBASE STORAGE
+   ========================================================= */
 
 const storage = getStorage(app);
 
-/* ---------- 7. FIREBASE ANALYTICS ---------- */
 
-// Analytics केवल supported browser environment में initialize होगा।
+/* =========================================================
+   7. FIREBASE CLOUD FUNCTIONS
+   ========================================================= */
+
+// सभी Cloud Functions का Region
+
+const functions = getFunctions(
+    app,
+    "asia-south1"
+);
+
+
+/* =========================================================
+   8. FIREBASE ANALYTICS
+   ========================================================= */
 
 let analytics = null;
 
 const analyticsReady = isSupported()
     .then(supported => {
+
         if (supported) {
+
             analytics = getAnalytics(app);
+
         }
 
         return analytics;
+
     })
     .catch(error => {
+
         console.warn(
             "Firebase Analytics unavailable:",
             error
         );
 
         return null;
+
     });
 
-/* ---------- 8. EXPORT FIREBASE SERVICES ---------- */
+
+/* =========================================================
+   9. ANALYTICS HELPER
+   ========================================================= */
+
+const getAnalyticsInstance = () => analytics;
+
+
+/* =========================================================
+   10. OFFLINE PERSISTENCE STATUS
+   ========================================================= */
+
+const offlinePersistenceReady = Promise.resolve(false);
+
+const isOfflinePersistenceEnabled = () => false;
+
+
+/* =========================================================
+   11. EXPORT FIREBASE SERVICES
+   ========================================================= */
 
 export {
+
     app,
+
     auth,
+
     db,
+
     storage,
+
+    functions,
 
     googleProvider,
 
     authPersistenceReady,
+
     offlinePersistenceReady,
+
     analyticsReady,
 
-    getAnalyticsInstance: () => analytics,
+    getAnalyticsInstance,
 
-    isOfflinePersistenceEnabled: () => offlinePersistenceEnabled
+    isOfflinePersistenceEnabled
+
 };
